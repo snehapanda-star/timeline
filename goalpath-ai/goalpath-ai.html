@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GoalPath AI — Timeline Generator</title>
+  <style>
+    :root{
+      --bg:#0b0f19; --card:#111827; --muted:#9ca3af; --text:#e5e7eb; --border:#243244; --accent:#7c3aed; --accent2:#22c55e;
+    }
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:linear-gradient(180deg,#070a12,var(--bg)); color:var(--text)}
+    .wrap{max-width:1100px;margin:0 auto;padding:20px}
+    header{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:44px;height:44px;border-radius:14px;background:radial-gradient(circle at 30% 30%,#a78bfa, #7c3aed 55%, #4c1d95); box-shadow:0 10px 30px rgba(124,58,237,.35)}
+    h1{margin:0;font-size:20px;letter-spacing:.2px}
+    .sub{margin:0;color:var(--muted);font-size:13px}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;margin-top:16px}
+    @media (max-width: 900px){.grid{grid-template-columns:1fr}}
+    .card{background:rgba(17,24,39,.75);border:1px solid var(--border);border-radius:18px;padding:16px;backdrop-filter: blur(8px)}
+    .card h2{margin:0 0 10px;font-size:14px;color:#c7d2fe;letter-spacing:.2px;text-transform:uppercase}
+    label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
+    input,textarea,select{width:100%;box-sizing:border-box;background:#0b1220;border:1px solid #22324a;color:var(--text);border-radius:12px;padding:10px 12px;outline:none}
+    textarea{min-height:92px;resize:vertical}
+    .row{display:flex;gap:12px}
+    .row > *{flex:1}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;border:none;border-radius:14px;padding:11px 14px;cursor:pointer;font-weight:650}
+    .btn-primary{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:white;box-shadow:0 14px 40px rgba(124,58,237,.35)}
+    .btn-ghost{background:transparent;border:1px solid #2b3b55;color:var(--text)}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;border:1px solid #2b3b55;background:#0b1220;color:var(--text);font-size:12px}
+    .muted{color:var(--muted)}
+    .timeline{margin-top:10px;display:flex;flex-direction:column;gap:12px}
+    .phase{border:1px solid #2b3b55;border-radius:16px;padding:12px;background:#0b1220}
+    .phase-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .phase h3{margin:0;font-size:15px}
+    .meta{display:flex;gap:8px;flex-wrap:wrap}
+    .tag{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid #2b3b55;background:#0b1220;color:var(--text)}
+    ul{margin:8px 0 0 18px;padding:0}
+    li{margin:6px 0;color:#d1d5db}
+    .qa{display:flex;flex-direction:column;gap:10px}
+    .qa textarea{min-height:54px}
+    .answer{white-space:pre-wrap;background:#0b1220;border:1px solid #2b3b55;border-radius:14px;padding:12px;color:#e5e7eb}
+    .small{font-size:12px}
+    .hr{height:1px;background:#22324a;margin:14px 0}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>GoalPath AI — Timeline Generator</h1>
+          <p class="sub">Simple, rules-based timeline + skill improvement ideas (no server needed).</p>
+        </div>
+      </div>
+      <div class="pill" title="Offline mode">Offline • Runs in your browser</div>
+    </header>
+
+    <div class="grid">
+      <section class="card" aria-labelledby="wizard-title">
+        <h2 id="wizard-title">1) Your goal</h2>
+
+        <label for="goalTitle">Ultimate goal (title)</label>
+        <input id="goalTitle" placeholder="e.g., Become job-ready as a data analyst" />
+
+        <label for="goalDesc">Goal description / what “done” means</label>
+        <textarea id="goalDesc" placeholder="Describe deliverable, outcome, or definition of success."></textarea>
+
+        <div class="row">
+          <div>
+            <label for="weeklyHours">Hours per week</label>
+            <input id="weeklyHours" type="number" min="1" max="40" value="6" />
+          </div>
+          <div>
+            <label for="targetWeeks">Target duration (weeks)</label>
+            <input id="targetWeeks" type="number" min="4" max="104" value="12" />
+          </div>
+        </div>
+
+        <label for="constraints">Obstacles / constraints (optional)</label>
+        <input id="constraints" placeholder="e.g., limited time, no mentor, need portfolio" />
+
+        <div class="hr"></div>
+
+        <h2>2) Your current skills & qualities</h2>
+
+        <label for="skills">List skills/qualities you already have (comma-separated)</label>
+        <input id="skills" placeholder="e.g., Excel, curiosity, writing, basic SQL" />
+
+        <label for="weaknesses">What you want to improve (comma-separated)</label>
+        <input id="weaknesses" placeholder="e.g., SQL joins, statistics, storytelling" />
+
+        <label for="learningStyle">Preferred learning style (optional)</label>
+        <select id="learningStyle">
+          <option value="hands-on" selected>Hands-on projects</option>
+          <option value="reading">Reading + notes</option>
+          <option value="videos">Videos + practice</option>
+          <option value="mentored">Mentored feedback</option>
+        </select>
+
+        <div class="hr"></div>
+
+        <button class="btn btn-primary" id="generateBtn" type="button">Generate timeline</button>
+        <p class="small muted" style="margin:10px 0 0">Tip: Keep it short—this generator works best with clear deliverables.</p>
+      </section>
+
+      <aside class="card" aria-labelledby="qa-title">
+        <h2 id="qa-title">3) Ask coaching questions</h2>
+        <div class="qa">
+          <label for="question">Ask: “How do I improve X?” or “What should I learn next?”</label>
+          <textarea id="question" placeholder="e.g., How do I improve SQL joins and practice it weekly?"></textarea>
+          <button class="btn btn-ghost" id="askBtn" type="button">Get answer</button>
+          <div class="answer" id="answer" aria-live="polite">Generate a timeline first, then ask questions.</div>
+        </div>
+
+        <div class="hr"></div>
+
+        <h2>Timeline output</h2>
+        <div class="small muted">Phases, milestones, tasks, and success metrics.</div>
+        <div class="timeline" id="timeline"></div>
+      </aside>
+    </div>
+
+    <footer class="small muted" style="margin-top:16px">
+      This is a rules-based MVP (no AI API). You can later replace the generator with an AI provider.
+    </footer>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function splitList(s){
+      return (s||"")
+        .split(",")
+        .map(x=>x.trim())
+        .filter(Boolean);
+    }
+
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+    function difficultyFromHours(hours){
+      if(hours >= 10) return "HARD";
+      if(hours >= 6) return "MEDIUM";
+      return "EASY";
+    }
+
+    function phasePlan({goalTitle, goalDesc, weeklyHours, targetWeeks, skills, weaknesses, constraints, learningStyle}){
+      const durationWeeks = clamp(Number(targetWeeks)||12, 4, 104);
+      const weekly = clamp(Number(weeklyHours)||6, 1, 40);
+      const difficulty = difficultyFromHours(weekly);
+
+      const have = skills.length ? skills : ["baseline learning" ];
+      const want = weaknesses.length ? weaknesses : ["core missing skill" ];
+
+      const phaseWeeks = Math.max(2, Math.floor(durationWeeks/3));
+      const p1 = phaseWeeks;
+      const p2 = phaseWeeks;
+      const p3 = Math.max(2, durationWeeks - p1 - p2);
+
+      const constraintsLine = constraints ? `Constraints: ${constraints}` : "";
+      const styleHint = learningStyle ? `Learning style: ${learningStyle}` : "";
+
+      const resources = [
+        "Create a weekly checklist + review notes",
+        "Use spaced repetition for key concepts",
+        "Build a small portfolio artifact early",
+        "Get feedback using a rubric (self/peer/mentor)"
+      ];
+
+      const milestones = [
+        { title: "Milestone 1 — Define & map the path", weeks: p1 },
+        { title: "Milestone 2 — Build core capability", weeks: p2 },
+        { title: "Milestone 3 — Integrate & deliver", weeks: p3 },
+      ];
+
+      const phases = [
+        {
+          objective: "Clarify the deliverable and your starting point.",
+          durationWeeks: p1,
+          difficulty: "EASY",
+          importance: 5,
+          dependencies: [],
+          resources: [
+            "Write a 1-page definition of done",
+            "List 5–8 sub-skills needed",
+            "Turn weaknesses into measurable practice goals",
+            constraintsLine,
+            styleHint
+          ].filter(Boolean),
+          tasks: [
+            {
+              title: "Goal breakdown",
+              estimatedHours: weekly * 2,
+              ideas: [
+                "Define the final output (what you will show).",
+                "List 3–5 phases you’ll need to reach it.",
+                "Convert weaknesses into specific practice targets."
+              ]
+            },
+            {
+              title: "Baseline assessment",
+              estimatedHours: weekly * 2,
+              ideas: [
+                `Use your current strengths: ${have.slice(0,4).join(", ")}.`,
+                `Pick one weakness to test first: ${want[0]}.`,
+                "Create a simple rubric (0–3) for each sub-skill."
+              ]
+            }
+          ],
+          successMetrics: [
+            "You can explain the path in your own words.",
+            "You have a measurable practice plan for week 1.",
+            "You know what ‘done’ looks like."
+          ]
+        },
+        {
+          objective: "Develop missing skills through focused practice + small outputs.",
+          durationWeeks: p2,
+          difficulty: difficulty,
+          importance: 5,
+          dependencies: ["Milestone 1 completed"],
+          resources: resources,
+          tasks: [
+            {
+              title: "Weekly practice loop",
+              estimatedHours: weekly * 4,
+              ideas: [
+                "45–60 min focused practice + 10 min review",
+                "Create a mini-output you can show",
+                "Track errors and repeat the pattern next week"
+              ]
+            },
+            {
+              title: "Targeted practice",
+              estimatedHours: weekly * 3,
+              ideas: [
+                "Pick one sub-skill and practice for 45–60 minutes.",
+                "Create a mini-output you can show.",
+                "Repeat next week with a small variation."
+              ]
+            }
+          ],
+          successMetrics: [
+            "You can explain the skill gap in your own words.",
+            "You produced 2–3 tangible improvements.",
+            "Your process is faster than week 1."
+          ]
+        },
+        {
+          objective: "Integrate everything into the final deliverable and polish.",
+          durationWeeks: p3,
+          difficulty: "EASY",
+          importance: 5,
+          dependencies: ["Milestone 2 completed"],
+          resources: [
+            "Use a checklist for quality",
+            "Do a final rubric-based review",
+            "Ship and reflect"
+          ],
+          tasks: [
+            {
+              title: "Integrate & quality pass",
+              estimatedHours: weekly * 3,
+              ideas: [
+                "Turn your checklist into a build order.",
+                "Fix the top 3 blockers first.",
+                "Do one ‘quality pass’ at the end."
+              ]
+            },
+            {
+              title: "Polish & validate",
+              estimatedHours: weekly * 2,
+              ideas: [
+                "Create a rubric and score yourself.",
+                "Test with a real user or a friend.",
+                "Document what you learned."
+              ]
+            },
+            {
+              title: "Ship",
+              estimatedHours: weekly * 1,
+              ideas: [
+                "Publish/share your final output.",
+                "Write a short reflection.",
+                "Plan the next iteration or next goal."
+              ]
+            }
+          ],
+          successMetrics: [
+            "Deliverable matches your definition of done.",
+            "You can demonstrate it end-to-end.",
+            "You have a repeatable process for the next goal."
+          ]
+        }
+      ];
+
+      return { difficulty, durationWeeks, weekly, phases, milestones };
+    }
+
+    function renderTimeline(plan){
+      const timelineEl = $("timeline");
+      timelineEl.innerHTML = "";
+
+      const header = document.createElement("div");
+      header.className = "small muted";
+      header.textContent = `Generated for ${plan.durationWeeks} weeks • ${plan.weekly} hrs/week • Difficulty: ${plan.difficulty}`;
+      timelineEl.appendChild(header);
+
+      plan.phases.forEach((p, idx) => {
+        const phase = document.createElement("div");
+        phase.className = "phase";
+
+        const top = document.createElement("div");
+        top.className = "phase-top";
+
+        const left = document.createElement("div");
+        const h3 = document.createElement("h3");
+        h3.textContent = `Phase ${idx+1}: ${p.objective}`;
+        left.appendChild(h3);
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        const t1 = document.createElement("span"); t1.className="tag"; t1.textContent = `${p.durationWeeks} weeks`;
+        const t2 = document.createElement("span"); t2.className="tag"; t2.textContent = `Difficulty: ${p.difficulty}`;
+        meta.appendChild(t1); meta.appendChild(t2);
+
+        top.appendChild(left);
+        top.appendChild(meta);
+        phase.appendChild(top);
+
+        const deps = document.createElement("div");
+        deps.className = "small muted";
+        deps.style.marginTop = "8px";
+        deps.textContent = p.dependencies.length ? `Dependencies: ${p.dependencies.join("; ")}` : "Dependencies: none";
+        phase.appendChild(deps);
+
+        const tasksTitle = document.createElement("div");
+        tasksTitle.className = "small";
+        tasksTitle.style.marginTop = "10px";
+        tasksTitle.textContent = "Tasks";
+        phase.appendChild(tasksTitle);
+
+        const ul = document.createElement("ul");
+        p.tasks.forEach(t => {
+          const li = document.createElement("li");
+          li.innerHTML = `<strong>${t.title}</strong> <span class="muted">(${t.estimatedHours} hrs est.)</span><br/>`;
+          const inner = document.createElement("ul");
+          inner.style.marginTop = "6px";
+          t.ideas.forEach(i => {
+            const li2 = document.createElement("li");
+            li2.textContent = i;
+            inner.appendChild(li2);
+          });
+          li.appendChild(inner);
+          ul.appendChild(li);
+        });
+        phase.appendChild(ul);
+
+        const smTitle = document.createElement("div");
+        smTitle.className = "small";
+        smTitle.style.marginTop = "10px";
+        smTitle.textContent = "Success metrics";
+        phase.appendChild(smTitle);
+
+        const smUl = document.createElement("ul");
+        p.successMetrics.forEach(m => {
+          const li = document.createElement("li");
+          li.textContent = m;
+          smUl.appendChild(li);
+        });
+        phase.appendChild(smUl);
+
+        timelineEl.appendChild(phase);
+      });
+    }
+
+    function answerQuestion(plan, question, weaknesses, skills){
+      const q = (question||"").toLowerCase();
+      const target = weaknesses[0] || "your next missing skill";
+
+      const wantsImprove = q.includes("improve") || q.includes("better") || q.includes("practice") || q.includes("learn");
+      const wantsNext = q.includes("next") || q.includes("what should") || q.includes("learn next");
+
+      if(!plan){
+        return "Generate a timeline first, then ask questions.";
+      }
+
+      if(wantsImprove){
+        return [
+          `To improve **${target}**, use this weekly plan:`,
+          "1) Pick one micro-skill (10–20 minutes to define).",
+          "2) Do 45–60 minutes focused practice (no multitasking).",
+          "3) Produce a mini-output you can show (a small artifact).",
+          "4) Review errors for 10 minutes and write 3 ‘rules’ you’ll apply next week.",
+          "5) Repeat next week with a small variation.",
+          "\nUse your strengths to reduce friction:",
+          `- ${skills.slice(0,4).join("\n- ")}`,
+          "\nSuccess check:",
+          "- You can explain what changed and what you’ll do next week."
+        ].join("\n");
+      }
+
+      if(wantsNext){
+        return [
+          "What to learn next (simple heuristic):",
+          "- If you can’t produce a mini-output yet, learn the smallest prerequisite first.",
+          "- Otherwise, practice the weakest link until you can demonstrate it end-to-end.",
+          "\nSuggested next focus:",
+          `- Start with: ${target}`,
+          "- Then: turn it into a deliverable you can show in 1 week."
+        ].join("\n");
+      }
+
+      return [
+        "Coaching answer (rules-based):",
+        "- Break the goal into 3 phases (define → build → integrate).",
+        "- Each week: practice one micro-skill and ship one mini-output.",
+        "- If you get stuck: fix the top 3 blockers first, then do a quality pass at the end."
+      ].join("\n");
+    }
+
+    let lastPlan = null;
+    let lastWeaknesses = [];
+    let lastSkills = [];
+
+    $("generateBtn").addEventListener("click", () => {
+      const goalTitle = $("goalTitle").value.trim();
+      const goalDesc = $("goalDesc").value.trim();
+      const weeklyHours = Number($("weeklyHours").value);
+      const targetWeeks = Number($("targetWeeks").value);
+      const constraints = $("constraints").value.trim();
+      const skills = splitList($("skills").value);
+      const weaknesses = splitList($("weaknesses").value);
+      const learningStyle = $("learningStyle").value;
+
+      if(!goalTitle){
+        $("answer").textContent = "Please enter your ultimate goal title.";
+        return;
+      }
+
+      lastPlan = phasePlan({
+        goalTitle, goalDesc, weeklyHours, targetWeeks, skills, weaknesses, constraints, learningStyle
+      });
+      lastWeaknesses = weaknesses;
+      lastSkills = skills;
+
+      renderTimeline(lastPlan);
+      $("answer").textContent = "Timeline generated. Now ask: ‘How do I improve X?’ or ‘What should I learn next?’";
+    });
+
+    $("askBtn").addEventListener("click", () => {
+      const q = $("question").value.trim();
+      if(!q){
+        $("answer").textContent = "Type a question first.";
+        return;
+      }
+      const ans = answerQuestion(lastPlan, q, lastWeaknesses, lastSkills);
+      $("answer").textContent = ans;
+    });
+
+    // Optional: prefill a demo
+    $("goalTitle").value = "Become job-ready as a data analyst";
+    $("goalDesc").value = "Build a portfolio with 3 projects and be able to explain analysis end-to-end.";
+    $("skills").value = "Excel, curiosity, writing";
+    $("weaknesses").value = "SQL joins, statistics, storytelling";
+  </script>
+</body>
+</html>

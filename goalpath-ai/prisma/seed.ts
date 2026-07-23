@@ -1,6 +1,6 @@
-import pkg from "@prisma/client";
-
-const { PrismaClient } = pkg as typeof import("@prisma/client");
+// Keep this seed script simple and compatible with Prisma's runtime.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
