@@ -28,7 +28,8 @@ def _build_prompt(payload: dict) -> str:
 
   return (
     "You are an expert learning coach. Create a practical, week-by-week plan. "
-    "Return ONLY valid JSON (no markdown) with this schema:\n"
+    "Return ONLY valid JSON (no markdown). Keep it concise. "
+    "Return ONLY valid JSON with this schema:\n"
     "{\n"
     '  "meta": {"goalTitle": string, "goalDesc": string, "weeklyHours": number, "targetWeeks": number, "constraints": string, "skills": string, "weaknesses": string, "learningStyle": string},\n'
     '  "weeks": [\n'
@@ -73,12 +74,12 @@ def generate_timeline():
       {"role": "system", "content": "Return only valid JSON."},
       {"role": "user", "content": prompt},
     ],
-    #temperature=0.4,
   )
-
   content = resp.choices[0].message.content or "{}"
   try:
     plan = json.loads(content)
+    print("Successfully parsed JSON from LLM response.")
+    print(json.dumps(plan, indent=2))
   except json.JSONDecodeError:
     # Fallback: try to extract JSON substring
     start = content.find("{")
@@ -390,6 +391,7 @@ HOME_HTML = r'''
         <button class="tabBtn active" type="button" data-tab="roadmap" id="tabRoadmap">Roadmap</button>
         <button class="tabBtn" type="button" data-tab="coach" id="tabCoach">AI Coach</button>
         <button class="tabBtn" type="button" data-tab="speaking" id="tabSpeaking">Speaking Practice</button>
+        <button class="tabBtn" type="button" data-tab="history" id="tabHistory">History</button>
       </div>
 
       <div class="tabPanel" id="panelRoadmap">
@@ -422,6 +424,16 @@ HOME_HTML = r'''
           <button class="btn btn-ghost" id="applyWeaknessesBtn" type="button" disabled>Apply detected weaknesses to timeline</button>
           <div class="hint">If you don’t know what to improve, this can suggest weaknesses to add to your plan.</div>
         </div>
+      </div>
+
+      <div class="tabPanel" id="panelHistory" style="display:none">
+        <h2>History</h2>
+        <div class="small muted">Your last generated roadmaps (inputs + timeline). Stored in your browser session.</div>
+        <div class="wizardNavRow" style="justify-content:flex-start;gap:10px;margin-top:12px">
+          <button class="btn btn-ghost" id="clearHistoryBtn" type="button">Clear history</button>
+        </div>
+        <div class="hr"></div>
+        <div id="historyList" class="timeline"></div>
       </div>
     </section>
 
@@ -643,6 +655,81 @@ HOME_HTML = r'''
           $('panelRoadmap').style.display = tab === 'roadmap' ? 'block' : 'none';
           $('panelCoach').style.display = tab === 'coach' ? 'block' : 'none';
           $('panelSpeaking').style.display = tab === 'speaking' ? 'block' : 'none';
+          $('panelHistory').style.display = tab === 'history' ? 'block' : 'none';
+        });
+      });
+    }
+
+    async function apiHistoryList(){
+      const res = await fetch('/api/history/list', { method: 'GET' });
+      if(!res.ok) throw new Error('Failed to load history');
+      return res.json();
+    }
+
+    async function apiHistoryAdd(item){
+      const res = await fetch('/api/history/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item)
+      });
+      if(!res.ok) throw new Error('Failed to save history');
+      return res.json();
+    }
+
+    async function apiHistoryClear(){
+      const res = await fetch('/api/history/clear', { method: 'POST' });
+      if(!res.ok) throw new Error('Failed to clear history');
+      return res.json();
+    }
+
+    function renderHistory(history){
+      const el = $('historyList');
+      el.innerHTML = '';
+      if(!history || history.length === 0){
+        el.innerHTML = `<div class="phase"><div class="small muted">No history yet. Generate a roadmap first.</div></div>`;
+        return;
+      }
+
+      history.forEach((item) => {
+        const inputs = item.inputs || {};
+        const title = inputs.goalTitle || 'Untitled goal';
+        const createdAt = item.createdAt ? new Date(item.createdAt) : null;
+        const when = createdAt && !isNaN(createdAt.getTime()) ? createdAt.toLocaleString() : '';
+
+        const div = document.createElement('div');
+        div.className = 'phase';
+        div.innerHTML = `
+          <h3 style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
+            <span>${title}</span>
+            <span class="small muted">${when}</span>
+          </h3>
+          <div class="small muted" style="margin-top:6px">${inputs.weeklyHours || '—'} hrs/week • ${inputs.targetWeeks || '—'} weeks</div>
+          <div class="wizardNavRow" style="justify-content:flex-start;margin-top:10px">
+            <button class="btn btn-primary" type="button" data-history-id="${item.id}">Load</button>
+          </div>
+        `;
+        el.appendChild(div);
+      });
+
+      el.querySelectorAll('button[data-history-id]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-history-id');
+          const found = (history || []).find(x => x.id === id);
+          if(!found) return;
+          wizard.plan = found.plan;
+          renderTimeline(found.plan);
+          // also update wizard review fields
+          const inputs = found.inputs || {};
+          $('goalTitle').value = inputs.goalTitle || '';
+          $('goalDesc').value = inputs.goalDesc || '';
+          $('weeklyHours').value = inputs.weeklyHours ?? '';
+          $('targetWeeks').value = inputs.targetWeeks ?? '';
+          $('constraints').value = inputs.constraints || '';
+          $('skills').value = inputs.skills || '';
+          $('weaknesses').value = inputs.weaknesses || '';
+          $('learningStyle').value = inputs.learningStyle || 'hands-on';
+          updateReview();
+          $('tabRoadmap').click();
         });
       });
     }
@@ -703,11 +790,35 @@ HOME_HTML = r'''
         renderTimeline(plan);
         showPostOnboarding();
         $('tabRoadmap').click();
+
+        // Save to history
+        const item = {
+          id: `gp_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+          createdAt: new Date().toISOString(),
+          inputs: payload,
+          plan
+        };
+        await apiHistoryAdd(item);
+        // Refresh history list if user opens it
+        if($('panelHistory').style.display === 'block'){
+          const h = await apiHistoryList();
+          renderHistory(h.history);
+        }
       } catch (err) {
         $('answer').textContent = `Error generating timeline: ${String(err?.message || err)}`;
       } finally {
         generateBtn.disabled = false;
         generateBtn.textContent = prevText;
+      }
+    });
+
+    $('clearHistoryBtn').addEventListener('click', async () => {
+      try{
+        await apiHistoryClear();
+        const h = await apiHistoryList();
+        renderHistory(h.history);
+      }catch(e){
+        // ignore
       }
     });
 
@@ -751,6 +862,12 @@ HOME_HTML = r'''
     updatePreview();
     showStep(1);
 
+    // On refresh: open History tab and load history immediately.
+    // (Wizard still works; user can generate a new roadmap from the onboarding steps.)
+    $('postOnboarding').style.display = 'block';
+    $('tabHistory').click();
+    apiHistoryList().then((h) => renderHistory(h.history)).catch(() => {});
+
     // live preview updates
     ['goalTitle','weeklyHours','targetWeeks','skills','learningStyle'].forEach(id => {
       $(id).addEventListener('input', updatePreview);
@@ -765,6 +882,43 @@ HOME_HTML = r'''
 @app.get("/")
 def index():
   return HOME_HTML
+
+
+@app.post("/api/history/add")
+def history_add():
+  # Lazy import to avoid changing top imports too much.
+  from flask import session
+  data = request.get_json(force=True, silent=True) or {}
+  item = {
+    "id": data.get("id"),
+    "createdAt": data.get("createdAt"),
+    "inputs": data.get("inputs"),
+    "plan": data.get("plan"),
+  }
+  if not item.get("id"):
+    return jsonify({"ok": False, "error": "missing id"}), 400
+
+  hist = session.get("history", [])
+  # Cap history size
+  hist = [x for x in hist if x.get("id") != item["id"]]
+  hist.insert(0, item)
+  hist = hist[:20]
+  session["history"] = hist
+  return jsonify({"ok": True})
+
+
+@app.get("/api/history/list")
+def history_list():
+  from flask import session
+  hist = session.get("history", [])
+  return jsonify({"ok": True, "history": hist})
+
+
+@app.post("/api/history/clear")
+def history_clear():
+  from flask import session
+  session["history"] = []
+  return jsonify({"ok": True})
 
 if __name__ == "__main__":
   app.run(host="127.0.0.1", port=5000, debug=True)
