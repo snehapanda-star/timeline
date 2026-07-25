@@ -630,22 +630,48 @@
     $('nextBtn3').addEventListener('click', () => { if(!validateStep(3)) return; showStep(4); updatePreview(); });
     $('backBtn3').addEventListener('click', () => showStep(3));
 
-    $('generateBtn').addEventListener('click', () => {
-      const plan = phasePlan({
-        goalTitle: $('goalTitle').value.trim(),
-        goalDesc: $('goalDesc').value.trim(),
-        weeklyHours: Number($('weeklyHours').value),
-        targetWeeks: Number($('targetWeeks').value),
-        constraints: $('constraints').value.trim(),
-        skills: $('skills').value.trim(),
-        weaknesses: $('weaknesses').value.trim(),
-        learningStyle: $('learningStyle').value
+    async function generateTimelineFromApi(payload){
+      const res = await fetch('/api/generate-timeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
-      wizard.plan = plan;
-      renderTimeline(plan);
-      showPostOnboarding();
-      // activate Roadmap tab
-      $('tabRoadmap').click();
+      if(!res.ok){
+        const text = await res.text().catch(() => '');
+        throw new Error(`Request failed (${res.status}). ${text}`);
+      }
+      return res.json();
+    }
+
+    $('generateBtn').addEventListener('click', async () => {
+      const generateBtn = $('generateBtn');
+      generateBtn.disabled = true;
+      const prevText = generateBtn.textContent;
+      generateBtn.textContent = 'Generating...';
+
+      try {
+        const payload = {
+          goalTitle: $('goalTitle').value.trim(),
+          goalDesc: $('goalDesc').value.trim(),
+          weeklyHours: Number($('weeklyHours').value),
+          targetWeeks: Number($('targetWeeks').value),
+          constraints: $('constraints').value.trim(),
+          skills: $('skills').value.trim(),
+          weaknesses: $('weaknesses').value.trim(),
+          learningStyle: $('learningStyle').value
+        };
+
+        const plan = await generateTimelineFromApi(payload);
+        wizard.plan = plan;
+        renderTimeline(plan);
+        showPostOnboarding();
+        $('tabRoadmap').click();
+      } catch (err) {
+        $('answer').textContent = `Error generating timeline: ${String(err?.message || err)}`;
+      } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = prevText;
+      }
     });
 
     $('askBtn').addEventListener('click', () => {
