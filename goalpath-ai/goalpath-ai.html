@@ -17,6 +17,20 @@
       --primary2:#dbf0f2;
       --border:rgba(255,255,255,.12);
       --shadow:0 20px 60px rgba(0,0,0,.35);
+      --link:#a5b4fc;
+    }
+
+    /* Light mode overrides */
+    body[data-theme="light"]{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#475569;
+      --primary:#4f46e5;
+      --primary2:#06b6d4;
+      --border:rgba(15,23,42,.12);
+      --shadow:0 20px 60px rgba(2,6,23,.12);
+      --link:#4f46e5;
     }
     *{box-sizing:border-box}
     body{
@@ -25,6 +39,10 @@
       background:linear-gradient(180deg,#070b14 0%, #0b1220 60%, #070b14 100%);
       color:var(--text);
     }
+
+    body[data-theme="light"]{
+      background:linear-gradient(180deg,#f8fafc 0%, #f6f7fb 60%, #f8fafc 100%);
+    }
     .wrap{max-width:1100px;margin:0 auto;padding:28px 18px 60px}
     header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
     .brand{display:flex;align-items:center;gap:12px}
@@ -32,6 +50,11 @@
       width:42px;height:42px;border-radius:14px;
       background:linear-gradient(135deg,var(--primary),var(--primary2));
       box-shadow:0 18px 40px rgba(124,58,237,.25);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:20px;
+      line-height:1;
     }
     h1{font-size:18px;margin:0;letter-spacing:.2px}
     .sub{color:var(--muted);font-size:13px;margin-top:2px}
@@ -42,6 +65,10 @@
       border-radius:18px;
       box-shadow:var(--shadow);
       backdrop-filter: blur(10px);
+    }
+
+    body[data-theme="light"] .card{
+      background:rgba(255,255,255,.72);
     }
 
     .grid{
@@ -99,10 +126,13 @@
     .previewTitle{font-weight:800;margin-bottom:10px}
     .previewItem{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
     .previewItem:last-of-type{border-bottom:none}
-    .previewValue{color:#fff;font-weight:700;text-align:right}
+    .previewValue{color:var(--text);font-weight:700;text-align:right}
     .hr{height:1px;background:rgba(255,255,255,.10);margin:14px 0}
     .small{font-size:12px}
     .muted{color:var(--muted)}
+    
+    /* Ensure primary button text stays readable on dark button background */
+    body:not([data-theme="light"]) .btn-primary{color:#0b1220}
 
     .reviewGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
     .reviewItem{padding:10px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.03)}
@@ -120,17 +150,44 @@
     .phase ul{margin:0;padding-left:18px;color:var(--muted)}
 
     footer{margin-top:18px;text-align:center;color:var(--muted)}
+
+    /* Theme toggle */
+    .themeToggle{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-left:auto;
+      z-index:5;
+    }
+    .toggleBtn{
+      border-radius:14px;
+      padding:10px 12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    body[data-theme="light"] .toggleBtn{
+      border-color:rgba(15,23,42,.14);
+      background:rgba(15,23,42,.04);
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
+        <div class="logo" aria-hidden="true">🏆</div>
         <div>
           <h1>GoalPath - AI Timeline Generator</h1>
           <div class="sub">From vision to timeline in one click.</div>
         </div>
+      </div>
+
+      <div class="themeToggle" aria-label="Theme toggle">
+        <button class="toggleBtn" id="themeToggle" type="button" aria-pressed="false">Toggle theme</button>
       </div>
     </header>
 
@@ -278,7 +335,6 @@
     </section>
 
     <footer class="small muted">
-      <div>This is a rules-based MVP (no AI API). You can later replace the generator with an AI provider.</div>
       <div style="margin-top:6px">© <span id="year"></span> Sneha Panda</div>
     </footer>
   </div>
@@ -371,13 +427,13 @@
             const text = typeof item === 'string' ? item : item.text;
             const url = typeof item === 'string' ? null : item.readMore;
             const link = url
-              ? ` <a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#a5b4fc;text-decoration:underline">read more</a>`
+              ? ` <a href="${url}" target="_blank" rel="noopener noreferrer" style="color:var(--link);text-decoration:underline">read more</a>`
               : '';
             return `<li>${text}${link}</li>`;
           }).join('')}</ul>
 
           <div class="small muted" style="margin:10px 0 6px">Success looks like:</div>
-          <div style="font-weight:800;color:#fff">${w.success}</div>
+          <div style="font-weight:800;color:var(--text)">${w.success}</div>
         `;
         el.appendChild(div);
       });
@@ -392,24 +448,87 @@
       const focus = pickOne(weakList, 'the skill you want to improve');
       const current = pickOne(skillList, 'what you already know');
 
-      // 3 actions with time estimates
-      const actions = [
-        `Spend 30 minutes doing one focused practice on ${focus}.`,
-        `Build a tiny version of your goal (something you can finish in 1–2 hours). For example: a simple calculator app, a study planner, or a small practice tracker—then share it for feedback.`,
-        `Write a short “what I learned” note (5 minutes) and ask one person for one specific suggestion.`
+      const goalLower = String(goalTitle || '').toLowerCase();
+      const isLawGoal = /lawyer|attorney|legal|corporate law|corporate lawyer|law school|bar exam/.test(goalLower);
+      const focusLower = String(focus || '').toLowerCase();
+      const isCodingFocus = /code|coding|program|programming|developer|javascript|python|sql|software|engineering/.test(focusLower);
+
+      // If the user wants to become a lawyer, coding is usually not a core requirement.
+      // We should explicitly acknowledge that and redirect to legal-specific skills.
+      if(isLawGoal && isCodingFocus){
+        const suggestedLegalSkills = [
+          'legal research (case law + statutes)',
+          'issue spotting and legal writing',
+          'contract basics (especially corporate/commercial)',
+          'reading comprehension of legal documents',
+          'oral advocacy / client communication'
+        ];
+
+        const legalSkill = suggestedLegalSkills[0];
+        const altSkill = suggestedLegalSkills[1];
+
+        return [
+          `Short answer: If your goal is to become a corporate lawyer, coding usually isn’t required. Instead, focus on legal research and legal writing—those are the core skills.` ,
+          `Why it matters: Corporate law work is mostly reading, analyzing, and drafting (contracts, memos, and deal documents). Coding can be useful in niche roles, but it’s not the standard path to becoming a lawyer.`,
+          `What to do this week (specific):`,
+          `1) Legal research drill: pick one corporate topic (e.g., “share purchase agreement basics” or “board resolutions”). Find 2–3 authoritative sources and summarize them in 10 bullet points.`,
+          `2) Legal writing drill: write a 1-page “issue-spotting memo” (Facts → Issue → Rule → Analysis → Conclusion) using your sources.`,
+          `3) Contract reading: read a short sample clause set (e.g., definitions + representations & warranties) and rewrite 3 clauses in plain English so you can explain them to a non-lawyer.`,
+          `Success looks like: you can explain the issue, cite the rule you used, and draft a clear memo/summary without relying on copy-paste.`,
+          `Common mistake to avoid: spending weeks on tools/skills that don’t map to the lawyer workflow. Choose one legal skill to practice weekly and measure progress by output (memos, summaries, drafts).`
+        ].join('\n\n');
+      }
+
+      // Vary advice so it doesn't repeat the same 3 actions every time.
+      const qLower = String(question || '').toLowerCase();
+      const wantsPlan = /plan|week|schedule|roadmap/.test(qLower);
+      const wantsPractice = /practice|drill|exercise|workout/.test(qLower);
+      const wantsResources = /resource|book|course|learn|study/.test(qLower);
+
+      const variants = [
+        {
+          title: 'Practice + feedback loop',
+          steps: [
+            `Do a 25-minute focused drill on ${focus}. Stop mid-way and write down what confused you (2–3 bullets).`,
+            `Do a 15-minute “fix pass”: use one reference (notes, docs, or an example) to correct the confusion and produce one clean output (a summary, solution, or draft).`,
+            `Ask for feedback: share that output with one person and ask one specific question: “What would you change first?”`
+          ],
+          success: `Success looks like: you can produce a correct output faster than last time, and you can explain the fix you made.`
+        },
+        {
+          title: 'Mini-project that matches the goal',
+          steps: [
+            `Pick a tiny deliverable that proves progress toward “${goalTitle}” (something you can finish in 60–90 minutes).`,
+            `Build it with a constraint: only use what you already know (${current}) plus one improvement area (${focus}).`,
+            `Write a 6-sentence “before/after” note: what was hard, what you changed, and what improved.`
+          ],
+          success: `Success looks like: you have a tangible artifact you can show, not just notes.`
+        },
+        {
+          title: 'Research → synthesis',
+          steps: [
+            `Find 2 high-quality examples related to ${focus}. For each, extract: (1) the key idea, (2) the common pattern, (3) one mistake to avoid.`,
+            `Synthesize into a one-page cheat sheet you can use immediately next time you practice.`,
+            `Run one “transfer test”: apply the cheat sheet to a new problem/task and compare results.`
+          ],
+          success: `Success looks like: you can reuse the same pattern on a new task without starting from scratch.`
+        }
       ];
 
-      const time = ['30 min', '1–2 hours', '5–10 min'];
+      let chosen = variants[0];
+      if(wantsPlan) chosen = variants[1];
+      else if(wantsPractice) chosen = variants[0];
+      else if(wantsResources) chosen = variants[2];
 
       return [
-        `Short answer: If you want to improve ${focus}, do one small practice session today and turn it into a tiny project you can show someone.`,
-        `Why it matters: ${focus} gets easier when you practice it in a real situation, not just in your head. Your goal (${goalTitle}) will move faster when you can explain what you built and what you fixed.`,
-        `What to do this week:`,
-        `1) ${actions[0]} (${time[0]}).`,
-        `2) ${actions[1]} (${time[1]}).`,
-        `3) ${actions[2]} (${time[2]}).`,
-        `Common mistake to avoid: Trying to learn everything at once. Pick one skill focus and one small project—then improve it step by step.`,
-        `Quick win (under 30 minutes): Write a 10-line plan for your mini-project (what it does, what inputs it needs, and what you’ll test). Then build the first screen or function right away.`
+        `Short answer: To improve ${focus}, use a repeatable loop that produces an output you can review (not just more reading).`,
+        `Why it matters: ${focus} improves fastest when you practice in a realistic way and then correct mistakes immediately. Your goal (“${goalTitle}”) moves faster when you can explain what you changed and why.`,
+        `What to do this week (${chosen.title}):`,
+        `1) ${chosen.steps[0]}`,
+        `2) ${chosen.steps[1]}`,
+        `3) ${chosen.steps[2]}`,
+        `${chosen.success}`,
+        `Common mistake to avoid: picking a broad focus and doing “random practice”. Pick one focus, produce one artifact, and iterate.`
       ].join('\n\n');
     }
 
@@ -538,6 +657,33 @@
 
     // init
     $('year').textContent = new Date().getFullYear();
+
+    // --- Theme (dark/light) ---
+    const THEME_KEY = 'goalpath_theme';
+    const themeToggleBtn = $('themeToggle');
+
+    function applyTheme(theme){
+      const isLight = theme === 'light';
+      document.body.setAttribute('data-theme', isLight ? 'light' : 'dark');
+      themeToggleBtn.setAttribute('aria-pressed', String(isLight));
+      themeToggleBtn.textContent = isLight ? 'Light mode' : 'Dark mode';
+    }
+
+    function getPreferredTheme(){
+      const saved = localStorage.getItem(THEME_KEY);
+      if(saved === 'light' || saved === 'dark') return saved;
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+
+    applyTheme(getPreferredTheme());
+
+    themeToggleBtn.addEventListener('click', () => {
+      const current = document.body.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      const next = current === 'light' ? 'dark' : 'light';
+      localStorage.setItem(THEME_KEY, next);
+      applyTheme(next);
+    });
+
     initTabs();
     updatePreview();
     showStep(1);
