@@ -6,9 +6,22 @@
   <title>GoalPath AI — Timeline Generator</title>
   <style>
     :root{
-      --bg:#0b0f19; --card:#111827; --muted:#9ca3af; --text:#e5e7eb; --border:#243244; --accent:#7c3aed; --accent2:#22c55e;
+      --bg:#070a12;
+      --card:rgba(17,24,39,.72);
+      --muted:#a7b0c0;
+      --text:#eef2ff;
+      --border:rgba(56,189,248,.22);
+      --accent:#7c3aed;
+      --accent2:#22c55e;
+      --accent3:#38bdf8;
+      --shadow: 0 18px 60px rgba(0,0,0,.35);
     }
-    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:linear-gradient(180deg,#070a12,var(--bg)); color:var(--text)}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:
+      radial-gradient(1200px 600px at 15% 10%, rgba(124,58,237,.25), transparent 55%),
+      radial-gradient(900px 500px at 85% 20%, rgba(56,189,248,.18), transparent 55%),
+      linear-gradient(180deg,#070a12,#0b1220);
+      color:var(--text)
+    }
     .wrap{max-width:1100px;margin:0 auto;padding:20px}
     header{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
     .brand{display:flex;gap:12px;align-items:center}
@@ -17,7 +30,7 @@
     .sub{margin:0;color:var(--muted);font-size:13px}
     .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;margin-top:16px}
     @media (max-width: 900px){.grid{grid-template-columns:1fr}}
-    .card{background:rgba(17,24,39,.75);border:1px solid var(--border);border-radius:18px;padding:16px;backdrop-filter: blur(8px)}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;backdrop-filter: blur(10px);box-shadow: var(--shadow)}
     .card h2{margin:0 0 10px;font-size:14px;color:#c7d2fe;letter-spacing:.2px;text-transform:uppercase}
     label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
     input,textarea,select{width:100%;box-sizing:border-box;background:#0b1220;border:1px solid #22324a;color:var(--text);border-radius:12px;padding:10px 12px;outline:none}
@@ -31,7 +44,7 @@
     .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;border:1px solid #2b3b55;background:#0b1220;color:var(--text);font-size:12px}
     .muted{color:var(--muted)}
     .timeline{margin-top:10px;display:flex;flex-direction:column;gap:12px}
-    .phase{border:1px solid #2b3b55;border-radius:16px;padding:12px;background:#0b1220}
+    .phase{border:1px solid rgba(56,189,248,.18);border-radius:16px;padding:12px;background:rgba(11,18,32,.75)}
     .phase-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
     .phase h3{margin:0;font-size:15px}
     .meta{display:flex;gap:8px;flex-wrap:wrap}
@@ -40,9 +53,25 @@
     li{margin:6px 0;color:#d1d5db}
     .qa{display:flex;flex-direction:column;gap:10px}
     .qa textarea{min-height:54px}
-    .answer{white-space:pre-wrap;background:#0b1220;border:1px solid #2b3b55;border-radius:14px;padding:12px;color:#e5e7eb}
+    .answer{white-space:pre-wrap;background:rgba(11,18,32,.85);border:1px solid rgba(56,189,248,.18);border-radius:14px;padding:12px;color:#e5e7eb}
     .small{font-size:12px}
     .hr{height:1px;background:#22324a;margin:14px 0}
+
+    .modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+    .modal{width:min(860px,100%);background:rgba(17,24,39,.95);border:1px solid var(--border);border-radius:18px;backdrop-filter: blur(10px);color:var(--text);box-shadow:0 30px 90px rgba(0,0,0,.45)}
+    .modalTop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid #22324a}
+    .modalTop h3{margin:0;font-size:16px}
+    .modalBody{padding:14px 16px;max-height:70vh;overflow:auto}
+    .modalClose{background:transparent;border:1px solid #2b3b55;color:var(--text);border-radius:12px;padding:8px 10px;cursor:pointer}
+    .modalBody ul{margin:8px 0 0 18px}
+    .modalBody li{margin:6px 0;color:#d1d5db}
+    .linkBtn{background:transparent;border:1px dashed #2b3b55;color:#c7d2fe;border-radius:12px;padding:6px 10px;cursor:pointer;font-weight:650}
+    .linkBtn:hover{border-style:solid}
+
+    .videoBox{display:flex;flex-direction:column;gap:10px}
+    .videoRow{display:flex;gap:12px;flex-wrap:wrap}
+    .videoRow > *{flex:1;min-width:220px}
+    .hint{color:var(--muted);font-size:12px;line-height:1.35}
   </style>
 </head>
 <body>
@@ -65,7 +94,7 @@
         <label for="goalTitle">Ultimate goal (title)</label>
         <input id="goalTitle" placeholder="e.g., Become job-ready as a data analyst" />
 
-        <label for="goalDesc">Goal description / what “done” means</label>
+        <label for="goalDesc">Goal description / what “done” means or your current position</label>
         <textarea id="goalDesc" placeholder="Describe deliverable, outcome, or definition of success."></textarea>
 
         <div class="row">
@@ -117,6 +146,26 @@
 
         <div class="hr"></div>
 
+        <h2>4) Optional: run a “speaking test”</h2>
+        <div class="videoBox">
+          <p class="small muted" style="margin:0">Upload a short video (or record) and get a weakness hypothesis + scoring rubric. (Offline MVP: analysis is a placeholder unless you connect an AI/video service.)</p>
+
+          <label for="videoFile">Video upload (mp4/webm)</label>
+          <input id="videoFile" type="file" accept="video/*" />
+
+          <label for="testPrompt">What should you say? (optional)</label>
+          <textarea id="testPrompt" placeholder="e.g., Tell a 60-second story about a project you led: problem → decision → impact → lesson learned."></textarea>
+
+          <button class="btn btn-ghost" id="testBtn" type="button">Analyze speaking test</button>
+          <div class="answer" id="testAnswer" aria-live="polite">Upload a video and click “Analyze speaking test”.</div>
+
+          <div class="hr"></div>
+          <button class="btn btn-ghost" id="applyWeaknessesBtn" type="button" disabled>Apply detected weaknesses to timeline</button>
+          <div class="hint">If you don’t know what to improve, this can suggest weaknesses to add to your plan.</div>
+        </div>
+
+        <div class="hr"></div>
+
         <h2>Timeline output</h2>
         <div class="small muted">Phases, milestones, tasks, and success metrics.</div>
         <div class="timeline" id="timeline"></div>
@@ -124,12 +173,33 @@
     </div>
 
     <footer class="small muted" style="margin-top:16px">
-      This is a rules-based MVP (no AI API). You can later replace the generator with an AI provider.
+      <div>This is a rules-based MVP (no AI API). You can later replace the generator with an AI provider.</div>
+      <div style="margin-top:6px">© <span id="year"></span> Sneha Panda</div>
     </footer>
   </div>
 
   <script>
     const $ = (id) => document.getElementById(id);
+
+    function clearInputsOnLoad(){
+      // Clear text inputs and textareas
+      document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(el => {
+        if(el.tagName.toLowerCase() === 'input'){
+          if(el.type === 'number') el.value = '';
+          else el.value = '';
+        }else{
+          el.value = '';
+        }
+      });
+      // Clear selects back to first option
+      document.querySelectorAll('select').forEach(sel => {
+        if(sel.options && sel.options.length) sel.selectedIndex = 0;
+      });
+      // Clear file inputs
+      document.querySelectorAll('input[type="file"]').forEach(el => {
+        el.value = '';
+      });
+    }
 
     function splitList(s){
       return (s||"")
@@ -162,61 +232,216 @@
       const constraintsLine = constraints ? `Constraints: ${constraints}` : "";
       const styleHint = learningStyle ? `Learning style: ${learningStyle}` : "";
 
-      const resources = [
-        "Create a weekly checklist + review notes",
-        "Use spaced repetition for key concepts",
-        "Build a small portfolio artifact early",
-        "Get feedback using a rubric (self/peer/mentor)"
-      ];
+      // Turn the user's goal description into concrete deliverables.
+      // Adaptive goal-type detection so tasks use the right vocabulary for tech, sports, travel, food, arts, etc.
+      const titleLower = (goalTitle || "").toLowerCase();
+      const desc = (goalDesc || "").toLowerCase();
 
-      const milestones = [
-        { title: "Milestone 1 — Define & map the path", weeks: p1 },
-        { title: "Milestone 2 — Build core capability", weeks: p2 },
-        { title: "Milestone 3 — Integrate & deliver", weeks: p3 },
-      ];
+      const isLeadershipGoal = titleLower.includes("director") || titleLower.includes("vp") || titleLower.includes("lead") || desc.includes("leadership") || desc.includes("promotion");
+      const isBalletGoal = titleLower.includes("ballerina") || titleLower.includes("ballet") || desc.includes("ballet") || desc.includes("ballerina");
+      const isSportsGoal = titleLower.includes("run") || titleLower.includes("marathon") || titleLower.includes("race") || titleLower.includes("soccer") || titleLower.includes("basketball") || titleLower.includes("tennis") || titleLower.includes("swim") || desc.includes("training") || desc.includes("practice") || desc.includes("fitness");
+      const isTravelGoal = titleLower.includes("travel") || titleLower.includes("trip") || titleLower.includes("vacation") || desc.includes("itinerary") || desc.includes("travel") || desc.includes("visit");
+      const isFoodGoal = titleLower.includes("cook") || titleLower.includes("cooking") || titleLower.includes("bake") || titleLower.includes("baking") || desc.includes("recipe") || desc.includes("cook") || desc.includes("meal");
+      const isArtsGoal = titleLower.includes("art") || titleLower.includes("painter") || titleLower.includes("music") || titleLower.includes("guitar") || titleLower.includes("piano") || desc.includes("draw") || desc.includes("paint") || desc.includes("perform");
+
+      const goalType = isLeadershipGoal ? "leadership" :
+        (isBalletGoal ? "ballet" :
+        (isSportsGoal ? "sports" :
+        (isTravelGoal ? "travel" :
+        (isFoodGoal ? "food" :
+        (isArtsGoal ? "arts" : "general")))));
+
+      const deliverableLabel = goalType === "leadership"
+        ? "Director communication kit (narrative + decks + exec updates)"
+        : (goalType === "ballet"
+          ? "Ballet training plan (technique + performance evidence)"
+          : (goalType === "sports"
+            ? "Training plan + performance evidence (workouts + test results)"
+            : (goalType === "travel"
+              ? "Trip plan (itinerary + budget + contingency)"
+              : (goalType === "food"
+                ? "Cooking plan (recipes + tasting notes + repeatable method)"
+                : (goalType === "arts"
+                  ? "Creative practice plan (portfolio/performance evidence)"
+                  : "Final deliverable")))));
+
+      const deliverableType = goalType;
+
+      // Map weaknesses to concrete mini-output formats.
+      const weaknessToMiniOutput = (w) => {
+        const x = (w || "").toLowerCase();
+        if(x.includes("sql")) return "a SQL query + 3-line explanation of assumptions";
+        if(x.includes("join")) return "a join-focused SQL exercise with before/after results";
+        if(x.includes("statistics") || x.includes("probab")) return "a stats mini-notebook: 1 metric, 1 plot, 1 interpretation";
+        if(x.includes("story") || x.includes("storytelling") || x.includes("narr")) return "a 1-page narrative: problem → method → insight → next step";
+        if(x.includes("excel")) return "an Excel workbook: 1 dashboard + 5 formulas documented";
+        if(x.includes("writing")) return "a short write-up with a rubric score (clarity/structure)";
+        if(x.includes("presentation") || x.includes("pitch")) return "a 5-slide deck + speaker notes";
+        if(x.includes("dashboard") || x.includes("viz") || x.includes("visual")) return "a dashboard mock + 3 design choices";
+        return "a mini-output artifact you can show (template + example + rubric score)";
+      };
+
+      const miniOutputs = want.slice(0, 6).map(w => ({
+        weakness: w,
+        miniOutput: weaknessToMiniOutput(w)
+      }));
+
+      const resources = goalType === "leadership"
+        ? [
+            "Create a weekly ‘exec evidence’ checklist (what you’ll show + what it proves)",
+            "Use a rubric every week (clarity, decision framing, evidence, stakeholder fit)",
+            "Build director artifacts early (draft narrative + draft deck + draft exec update)",
+            "Rehearse once out loud and time it (director-level pacing)"
+          ]
+        : (goalType === "ballet"
+          ? [
+              "Create a weekly technique checklist (alignment, turnout, balance, control)",
+              "Use a form rubric every week (clean lines, stability, consistency)",
+              "Practice short sets daily + one longer session weekly",
+              "Record 30–60 seconds of form evidence for progress tracking"
+            ]
+          : (goalType === "sports"
+            ? [
+                "Create a weekly training checklist (warm-up, drills, main set, cool-down)",
+                "Use a performance rubric (speed, endurance, technique quality)",
+                "Do one ‘test rep’ each week (small measurable benchmark)",
+                "Track recovery (sleep + soreness) and adjust volume"
+              ]
+              : (goalType === "travel"
+                ? [
+                    "Create a weekly planning checklist (must-sees, logistics, budget, contingencies)",
+                    "Use a ‘real-world readiness’ rubric (time, cost, transport, backups)",
+                    "Build your itinerary in layers (day-by-day, then refine)",
+                    "Practice one ‘dry run’ (maps + timing)"
+                  ]
+                  : (goalType === "food"
+                    ? [
+                        "Create a weekly cooking checklist (prep, technique, timing, taste)",
+                        "Use a taste rubric (flavor balance, texture, consistency)",
+                        "Cook one ‘core recipe’ repeatedly with small variations",
+                        "Write tasting notes and a repeatable method"
+                      ]
+                      : (goalType === "arts"
+                        ? [
+                            "Create a weekly creative checklist (practice, output, review)",
+                            "Use a quality rubric (composition, technique, expression)",
+                            "Produce one shareable piece per week",
+                            "Collect feedback and iterate"
+                          ]
+                          : [
+                              "Create a weekly checklist + review notes",
+                              "Use spaced repetition for key concepts (flashcards or spaced notes)",
+                              "Build a small artifact early (template first, then fill)",
+                              "Use a rubric every week (clarity, correctness, completeness, evidence)"
+                            ])))));
+
+      const milestones = goalType === "leadership"
+        ? [
+            { title: "Milestone 1 — Define your director narrative + exec success criteria", weeks: p1 },
+            { title: "Milestone 2 — Produce evidence artifacts for your communication weaknesses", weeks: p2 },
+            { title: "Milestone 3 — Integrate into a director communication kit + rehearse + ship", weeks: p3 },
+          ]
+        : (goalType === "ballet"
+          ? [
+              { title: "Milestone 1 — Baseline form + technique rubric", weeks: p1 },
+              { title: "Milestone 2 — Weekly technique sets + evidence", weeks: p2 },
+              { title: "Milestone 3 — Performance-ready routine + final form check", weeks: p3 },
+            ]
+          : (goalType === "sports"
+            ? [
+                { title: "Milestone 1 — Baseline test + training rubric", weeks: p1 },
+                { title: "Milestone 2 — Weekly drills + measurable test reps", weeks: p2 },
+                { title: "Milestone 3 — Peak week + performance evidence", weeks: p3 },
+              ]
+              : (goalType === "travel"
+                ? [
+                    { title: "Milestone 1 — Itinerary blueprint + budget", weeks: p1 },
+                    { title: "Milestone 2 — Logistics + contingency planning", weeks: p2 },
+                    { title: "Milestone 3 — Final itinerary + dry run", weeks: p3 },
+                  ]
+                  : (goalType === "food"
+                    ? [
+                        { title: "Milestone 1 — Pick core recipes + taste rubric", weeks: p1 },
+                        { title: "Milestone 2 — Repeatable cooking method + variations", weeks: p2 },
+                        { title: "Milestone 3 — Final menu + tasting notes", weeks: p3 },
+                      ]
+                      : (goalType === "arts"
+                        ? [
+                            { title: "Milestone 1 — Baseline + quality rubric", weeks: p1 },
+                            { title: "Milestone 2 — Weekly practice + shareable outputs", weeks: p2 },
+                            { title: "Milestone 3 — Portfolio/performance integration + review", weeks: p3 },
+                          ]
+                          : [
+                              { title: `Milestone 1 — Define your ${deliverableType} deliverable`, weeks: p1 },
+                              { title: "Milestone 2 — Produce evidence for each weakness", weeks: p2 },
+                              { title: `Milestone 3 — Integrate into your final ${deliverableType} + ship`, weeks: p3 },
+                            ])))));
 
       const phases = [
         {
-          objective: "Clarify the deliverable and your starting point.",
+          objective: `Clarify the deliverable (${deliverableLabel}) and your starting point.`,
           durationWeeks: p1,
           difficulty: "EASY",
           importance: 5,
           dependencies: [],
           resources: [
-            "Write a 1-page definition of done",
-            "List 5–8 sub-skills needed",
-            "Turn weaknesses into measurable practice goals",
+            isLeadershipGoal
+              ? "Write a 1-page ‘Director Narrative’ definition of done (problem → decision → impact → next direction)"
+              : `Write a 1-page definition of done for: ${deliverableLabel}`,
+            isLeadershipGoal
+              ? "List the exact director-level communication sub-skills you’ll need (hook, decision framing, evidence, stakeholder fit, pacing)"
+              : "List 5–8 sub-skills needed (only what you’ll use in the final deliverable)",
+            "Turn each weakness into a measurable weekly evidence target",
             constraintsLine,
-            styleHint
+            styleHint,
+            isLeadershipGoal
+              ? "Create a rubric with 4 criteria (clarity, decision framing, evidence quality, stakeholder fit) and score 0–3."
+              : "Create a rubric with 4 criteria (clarity, correctness, completeness, evidence) and score 0–3."
           ].filter(Boolean),
           tasks: [
             {
-              title: "Goal breakdown",
+              title: "Goal breakdown → deliverable blueprint",
               estimatedHours: weekly * 2,
               ideas: [
-                "Define the final output (what you will show).",
-                "List 3–5 phases you’ll need to reach it.",
-                "Convert weaknesses into specific practice targets."
+                isLeadershipGoal
+                  ? `Define the director-level output you will show: ${goalDesc || goalTitle}`
+                  : `Define the final output you will show: ${goalDesc || goalTitle}`,
+                isLeadershipGoal
+                  ? "List 3–5 director communication phases (narrative → deck → exec update → rehearsal → integration)"
+                  : "List 3–5 phases you’ll need (define → build → integrate → polish)",
+                `Convert weaknesses into weekly evidence targets: ${miniOutputs.map(m=>m.weakness).slice(0,4).join(", ")}`
               ]
             },
             {
-              title: "Baseline assessment",
+              title: "Baseline assessment → pick your first evidence task",
               estimatedHours: weekly * 2,
               ideas: [
-                `Use your current strengths: ${have.slice(0,4).join(", ")}.`,
-                `Pick one weakness to test first: ${want[0]}.`,
-                "Create a simple rubric (0–3) for each sub-skill."
+                isLeadershipGoal
+                  ? `Use your current strengths: ${have.slice(0,4).join(", ")}. (You’ll leverage technical credibility to strengthen evidence.)`
+                  : `Use your current strengths: ${have.slice(0,4).join(", ")}.`,
+                isLeadershipGoal
+                  ? "Run a 45–60 minute ‘director evidence test’: record a 60-second narrative + draft 1 slide + write 1 exec update"
+                  : `Run a 60–90 minute “evidence test” for: ${want[0]}.`,
+                isLeadershipGoal
+                  ? "Score yourself with the director rubric and write 2 specific fixes (one for framing, one for evidence)"
+                  : "Create a simple rubric (0–3) for each weakness and record what failed + why"
               ]
             }
           ],
           successMetrics: [
-            "You can explain the path in your own words.",
-            "You have a measurable practice plan for week 1.",
-            "You know what ‘done’ looks like."
+            isLeadershipGoal
+              ? "You can explain your director narrative and success criteria in your own words."
+              : "You can explain the deliverable and success criteria in your own words.",
+            "You have a measurable week-1 evidence plan (what artifact you’ll produce and how you’ll score it).",
+            isLeadershipGoal
+              ? "You know what ‘director-ready’ looks like for storytelling, presentation, and communication."
+              : "You know what ‘done’ looks like for your final deliverable."
           ]
         },
         {
-          objective: "Develop missing skills through focused practice + small outputs.",
+          objective: isLeadershipGoal
+            ? "Develop director-level communication through evidence-based weekly artifacts."
+            : "Develop missing skills through evidence-based weekly mini-outputs.",
           durationWeeks: p2,
           difficulty: difficulty,
           importance: 5,
@@ -224,79 +449,125 @@
           resources: resources,
           tasks: [
             {
-              title: "Weekly practice loop",
+              title: "Weekly evidence loop (repeatable, specific)",
               estimatedHours: weekly * 4,
               ideas: [
-                "45–60 min focused practice + 10 min review",
-                "Create a mini-output you can show",
-                "Track errors and repeat the pattern next week"
+                isLeadershipGoal
+                  ? "Do 1 focused practice block (45–60 min) for one weakness using a director drill (hook, decision framing, evidence, pacing)"
+                  : "Do 1 focused practice block (45–60 min) for one weakness",
+                isLeadershipGoal
+                  ? "Immediately produce the director artifact (draft narrative / draft slide / draft exec update)"
+                  : "Immediately produce the mini-output artifact (30–45 min)",
+                isLeadershipGoal
+                  ? "Write a 5-line ‘exec evidence note’: what changed, what evidence improved, what stakeholder question you answered"
+                  : "Write a 5-line “what changed” note + score it with the rubric (10 min)",
+                isLeadershipGoal
+                  ? "Do a 10-minute error review: list 3 failure causes (framing, evidence, pacing) and 1 fix to try next week"
+                  : "Do a 10-minute error review: list 3 failure causes and 1 fix to try next week"
               ]
             },
             {
-              title: "Targeted practice",
+              title: "Evidence mapping (weakness → artifact → rubric score)",
               estimatedHours: weekly * 3,
               ideas: [
-                "Pick one sub-skill and practice for 45–60 minutes.",
-                "Create a mini-output you can show.",
-                "Repeat next week with a small variation."
+                isLeadershipGoal
+                  ? `For each weakness, create a director artifact matching: ${miniOutputs.slice(0,4).map(m=>`${m.weakness}: ${m.miniOutput}`).join(" | ")}`
+                  : `For each weakness, create an artifact matching: ${miniOutputs.slice(0,4).map(m=>`${m.weakness}: ${m.miniOutput}`).join(" | ")}`,
+                "Rotate through weaknesses so you build breadth (not just one)",
+                "Keep a single folder of artifacts so Phase 3 can assemble quickly"
               ]
             }
           ],
           successMetrics: [
-            "You can explain the skill gap in your own words.",
-            "You produced 2–3 tangible improvements.",
-            "Your process is faster than week 1."
+            isLeadershipGoal
+              ? "You can explain each weakness and show director-level evidence you improved it."
+              : "You can explain each weakness and show evidence you improved it.",
+            "You produced 2–3 tangible improvements per weakness (at least 1 artifact per weakness).",
+            "Your artifacts are consistent enough to assemble into the final deliverable."
           ]
         },
         {
-          objective: "Integrate everything into the final deliverable and polish.",
+          objective: isLeadershipGoal
+            ? "Integrate director evidence into your director communication kit and rehearse for leadership delivery."
+            : "Integrate evidence into your final deliverable and polish for shipping.",
           durationWeeks: p3,
           difficulty: "EASY",
           importance: 5,
           dependencies: ["Milestone 2 completed"],
           resources: [
-            "Use a checklist for quality",
-            "Do a final rubric-based review",
-            "Ship and reflect"
+            isLeadershipGoal
+              ? "Use a director-quality checklist (rubric + decision framing + evidence strength + pacing)"
+              : "Use a checklist for quality (rubric + completeness)",
+            isLeadershipGoal
+              ? "Do a final director rubric review (score 0–3 and fix anything <2)"
+              : "Do a final rubric-based review (score 0–3 and fix anything <2)",
+            "Ship and reflect (what to improve next goal)"
           ],
           tasks: [
             {
-              title: "Integrate & quality pass",
+              title: "Integrate evidence → final deliverable build",
               estimatedHours: weekly * 3,
               ideas: [
-                "Turn your checklist into a build order.",
-                "Fix the top 3 blockers first.",
-                "Do one ‘quality pass’ at the end."
+                isLeadershipGoal
+                  ? `Turn your director rubric into a build order for: ${deliverableLabel}`
+                  : `Turn your rubric into a build order for: ${deliverableLabel}`,
+                "Fix the top 3 blockers first (highest rubric impact)",
+                isLeadershipGoal
+                  ? "Do one ‘director quality pass’ at the end: hook clarity, decision framing, evidence strength, stakeholder fit"
+                  : "Do one ‘quality pass’ at the end: clarity, correctness, completeness, evidence"
               ]
             },
             {
-              title: "Polish & validate",
+              title: "Polish & validate with a real audience",
               estimatedHours: weekly * 2,
               ideas: [
-                "Create a rubric and score yourself.",
-                "Test with a real user or a friend.",
-                "Document what you learned."
+                isLeadershipGoal
+                  ? "Create a director rubric and score yourself (final score target: 2+ on all criteria)"
+                  : "Create a rubric and score yourself (final score target: 2+ on all criteria)",
+                isLeadershipGoal
+                  ? "Test with a real peer/leader: ask them to summarize your decision + impact in 30 seconds"
+                  : "Test with a real user/friend: ask them to summarize your message in 30 seconds",
+                "Document what confused them + update your deliverable"
               ]
             },
             {
-              title: "Ship",
+              title: "Ship + reflection",
               estimatedHours: weekly * 1,
               ideas: [
-                "Publish/share your final output.",
-                "Write a short reflection.",
-                "Plan the next iteration or next goal."
+                "Publish/share your final output",
+                "Write a short reflection: what you learned, what you’d do faster next time",
+                "Plan the next iteration or next goal based on the rubric gaps"
               ]
             }
           ],
           successMetrics: [
             "Deliverable matches your definition of done.",
-            "You can demonstrate it end-to-end.",
-            "You have a repeatable process for the next goal."
+            isLeadershipGoal
+              ? "You can demonstrate it end-to-end (problem → decision → evidence → director-level next direction)."
+              : "You can demonstrate it end-to-end (from problem → method → evidence → conclusion).",
+            "You have a repeatable evidence-based process for the next goal."
           ]
         }
       ];
 
-      return { difficulty, durationWeeks, weekly, phases, milestones };
+      return {
+        difficulty,
+        durationWeeks,
+        weekly,
+        phases,
+        milestones,
+        meta: {
+          goalTitle,
+          goalDesc,
+          constraints,
+          learningStyle,
+          have,
+          want,
+          deliverableLabel,
+          deliverableType,
+          miniOutputs
+        }
+      };
     }
 
     function renderTimeline(plan){
@@ -346,6 +617,21 @@
         p.tasks.forEach(t => {
           const li = document.createElement("li");
           li.innerHTML = `<strong>${t.title}</strong> <span class="muted">(${t.estimatedHours} hrs est.)</span><br/>`;
+
+          // If the task includes a weakness hint, make it clickable for deeper ideas.
+          // We infer weakness from the task title/ideas.
+          const weaknessHint = (t.weaknessHint || "").toString();
+          const inferredWeakness = weaknessHint || inferWeaknessFromTask(t);
+          if(inferredWeakness){
+            const btn = document.createElement("button");
+            btn.className = "linkBtn";
+            btn.type = "button";
+            btn.textContent = "Read more (how to improve)";
+            btn.addEventListener("click", () => openWeaknessModal(inferredWeakness, plan, t));
+            li.appendChild(btn);
+            li.appendChild(document.createElement("br"));
+          }
+
           const inner = document.createElement("ul");
           inner.style.marginTop = "6px";
           t.ideas.forEach(i => {
@@ -376,54 +662,282 @@
       });
     }
 
+    function inferWeaknessFromTask(t){
+      const text = `${t.title||""} ${(t.ideas||[]).join(" ")}`.toLowerCase();
+      const candidates = (lastWeaknesses && lastWeaknesses.length) ? lastWeaknesses : [];
+      for(const w of candidates){
+        const lw = (w||"").toLowerCase();
+        if(lw && text.includes(lw)) return w;
+      }
+      // fallback: map common director weaknesses
+      if(text.includes("story")) return "storytelling";
+      if(text.includes("present") || text.includes("slide") || text.includes("deck")) return "presentation";
+      if(text.includes("communicat") || text.includes("stakeholder") || text.includes("exec")) return "communication";
+      return null;
+    }
+
+    function weaknessDeepIdeas(weakness, plan){
+      const w = (weakness||"").toLowerCase();
+      const deliverable = plan?.meta?.deliverableLabel || "your final deliverable";
+      const constraints = plan?.meta?.constraints ? `Constraints: ${plan.meta.constraints}` : null;
+
+      const base = [
+        `Goal connection: make your ${weakness} directly support ${deliverable}.`,
+        constraints,
+        `Rubric focus: clarity, correctness, completeness, evidence.`
+      ].filter(Boolean);
+
+      if(w.includes("story")){
+        return base.concat([
+          "Use this 4-part story frame (write it first, then speak it):",
+          "- Problem: what was broken / why it mattered",
+          "- Decision: what you chose and why (tradeoffs)",
+          "- Impact: outcomes + evidence (metrics, before/after)",
+          "- Next step: what you’d do as a director",
+          "Practice drill (15 minutes): record 60 seconds, then cut it to 45 seconds without losing impact.",
+          "Common failure: too much context, not enough decision + evidence. Fix by adding 1 sentence: ‘The key decision was…’"
+        ]);
+      }
+      if(w.includes("present") || w.includes("slide") || w.includes("deck")){
+        return base.concat([
+          "Slide structure (5 slides):",
+          "- Slide 1: the decision/problem (20 seconds)",
+          "- Slide 2: approach (1 diagram or 3 bullets)",
+          "- Slide 3: evidence (metrics + before/after)",
+          "- Slide 4: risks + mitigations",
+          "- Slide 5: recommendation + next step",
+          "Presentation drill (10 minutes): rehearse once with a timer; aim for 5–8 minutes total for a first draft.",
+          "Common failure: slides that read like notes. Fix by using ‘one claim per slide’ and moving details to speaker notes."
+        ]);
+      }
+      if(w.includes("communicat")){
+        return base.concat([
+          "Exec communication template (email/Slack update):",
+          "- Context (2–3 lines)",
+          "- Decision needed (one sentence)",
+          "- Options (2 bullets)",
+          "- Recommendation (one bullet)",
+          "- Risks + mitigations (2 bullets)",
+          "Practice drill (20 minutes): rewrite one real update you sent recently using the template; score it with your rubric.",
+          "Common failure: ‘status’ without a decision request. Fix by ending with: ‘I recommend X by date Y because…’"
+        ]);
+      }
+
+      return base.concat([
+        "Use the same weekly evidence loop:",
+        "- Spec the artifact (5 lines)",
+        "- Practice the smallest unit (45–60 min)",
+        "- Build the artifact (30–45 min)",
+        "- Score + write one next-week fix."
+      ]);
+    }
+
+    function ensureModal(){
+      if(document.getElementById("weaknessModalOverlay")) return;
+      const overlay = document.createElement("div");
+      overlay.className = "modalOverlay";
+      overlay.id = "weaknessModalOverlay";
+      overlay.innerHTML = `
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="weaknessModalTitle">
+          <div class="modalTop">
+            <h3 id="weaknessModalTitle">Read more</h3>
+            <button class="modalClose" type="button" id="weaknessModalClose">Close</button>
+          </div>
+          <div class="modalBody" id="weaknessModalBody"></div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      overlay.addEventListener("click", (e) => {
+        if(e.target === overlay) closeWeaknessModal();
+      });
+      overlay.querySelector("#weaknessModalClose").addEventListener("click", closeWeaknessModal);
+    }
+
+    function openWeaknessModal(weakness, plan, task){
+      ensureModal();
+      const overlay = document.getElementById("weaknessModalOverlay");
+      const title = document.getElementById("weaknessModalTitle");
+      const body = document.getElementById("weaknessModalBody");
+
+      title.textContent = `How to improve: ${weakness}`;
+
+      const ideas = weaknessDeepIdeas(weakness, plan);
+      const taskLine = task?.title ? `<div class="hint" style="margin-bottom:10px">Task: <strong>${task.title}</strong></div>` : "";
+
+      body.innerHTML = `
+        ${taskLine}
+        <div class="small muted" style="margin-bottom:10px">Use these steps to produce evidence that supports your director-level deliverable.</div>
+        <ul>
+          ${ideas.map(x => `<li>${escapeHtml(x)}</li>`).join("")}
+        </ul>
+      `;
+
+      overlay.style.display = "flex";
+    }
+
+    function closeWeaknessModal(){
+      const overlay = document.getElementById("weaknessModalOverlay");
+      if(overlay) overlay.style.display = "none";
+    }
+
+    function escapeHtml(s){
+      return (s||"").toString()
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#039;");
+    }
+
     function answerQuestion(plan, question, weaknesses, skills){
       const q = (question||"").toLowerCase();
-      const target = weaknesses[0] || "your next missing skill";
-
-      const wantsImprove = q.includes("improve") || q.includes("better") || q.includes("practice") || q.includes("learn");
-      const wantsNext = q.includes("next") || q.includes("what should") || q.includes("learn next");
-
       if(!plan){
         return "Generate a timeline first, then ask questions.";
       }
 
+      const meta = plan.meta || {};
+      const want = meta.want || weaknesses || [];
+      const miniOutputs = meta.miniOutputs || [];
+      const goalTitle = meta.goalTitle || "your goal";
+      const deliverableLabel = meta.deliverableLabel || "your final deliverable";
+
+      const wantsImprove = q.includes("improve") || q.includes("better") || q.includes("practice") || q.includes("learn");
+      const wantsNext = q.includes("next") || q.includes("what should") || q.includes("learn next");
+
+      const wantsNetworking = q.includes("network") || q.includes("networking") || q.includes("relationship") || q.includes("mentor") || q.includes("sponsor");
+      const wantsPresentationTips = q.includes("present") || q.includes("presentation") || q.includes("slides") || q.includes("deck") || q.includes("pitch") || q.includes("talk");
+      const wantsCommunicationTips = q.includes("communicat") || q.includes("stakeholder") || q.includes("exec") || q.includes("leadership") || q.includes("update") || q.includes("email") || q.includes("slack");
+
+      // Pick the most relevant weakness mentioned in the question.
+      const pickTarget = () => {
+        const candidates = want.length ? want : (weaknesses || []);
+        if(!candidates.length) return "your next missing skill";
+        for(const w of candidates){
+          const lw = (w||"").toLowerCase();
+          if(lw && q.includes(lw)) return w;
+        }
+        // fallback: first weakness
+        return candidates[0];
+      };
+
+      const target = pickTarget();
+      const targetMini = miniOutputs.find(m => m.weakness === target)?.miniOutput || "a mini-output artifact you can show";
+
+      const constraintsLine = meta.constraints ? `Constraints to respect: ${meta.constraints}` : "";
+      const styleLine = meta.learningStyle ? `Learning style: ${meta.learningStyle}` : "";
+
+      const weeklyPlan = [
+        `Goal: ${goalTitle}`,
+        `This week’s evidence target: **${target}**`,
+        `Your mini-output (what you will produce): ${targetMini}`,
+        constraintsLine ? constraintsLine : null,
+        styleLine ? styleLine : null,
+        "",
+        "Step-by-step (use this exact order):",
+        "1) Define the artifact: write a 5-line spec (inputs, steps, expected result, rubric criteria).",
+        "2) Practice block (45–60 min): do only the smallest sub-skill needed for the artifact.",
+        "3) Build the artifact (30–45 min): produce the mini-output in a clean, shareable format.",
+        "4) Evidence note (10 min): write 3 bullets—what worked, what failed, what you’ll change.",
+        "5) Rubric score (5 min): score clarity/correctness/completeness/evidence (0–3 each).",
+        "6) Next-week fix: pick ONE failure cause and write the exact fix you’ll try next time.",
+        "",
+        "Use your strengths to reduce friction:",
+        `- ${(skills && skills.length ? skills : meta.have || []).slice(0,4).join("\n- ")}`,
+        "",
+        "Success check:",
+        `- You can explain how your ${target} evidence connects to ${deliverableLabel}.`
+      ].filter(Boolean).join("\n");
+
+      const networkingTips = [
+        "Networking tips (director-level):",
+        "- Ask for a 20-minute ‘career narrative’ chat: ‘What does director impact look like here?’",
+        "- Bring one artifact: a 5-slide deck or 1-page narrative (not a vague request).",
+        "- Ask for one specific feedback item: ‘Which slide/story would you cut or rewrite for exec clarity?’",
+        "- Convert conversations into sponsorship: follow up with a short recap + next action you’ll take.",
+        "- Target 2 people: one peer (for practice) + one senior leader (for visibility)."
+      ].join("\n");
+
+      const presentationTips = [
+        "Presentation tips (practical, immediate):",
+        "- Use the ‘one claim per slide’ rule: every slide must answer one question.",
+        "- Start with a 20-second hook: the decision/problem you’re solving.",
+        "- Show evidence early: metrics, outcomes, or before/after results within the first 2 slides.",
+        "- End with a decision request: ‘If we do X, we get Y; risks are Z; I recommend…’",
+        "- Rehearse once out loud and time it (aim for 5–8 minutes for a first version)."
+      ].join("\n");
+
+      const communicationTips = [
+        "Communication tips (exec-ready):",
+        "- Write updates in this order: Context → Decision needed → Options → Recommendation → Risks.",
+        "- Replace ‘I did X’ with ‘Because of X, we achieved Y (impact)’.",
+        "- Use fewer words: one paragraph per section; bullets for evidence.",
+        "- Always include: what changed, why it matters, and what you need from stakeholders.",
+        "- Close with a clear next step + owner + date (even if it’s tentative)."
+      ].join("\n");
+
       if(wantsImprove){
-        return [
-          `To improve **${target}**, use this weekly plan:`,
-          "1) Pick one micro-skill (10–20 minutes to define).",
-          "2) Do 45–60 minutes focused practice (no multitasking).",
-          "3) Produce a mini-output you can show (a small artifact).",
-          "4) Review errors for 10 minutes and write 3 ‘rules’ you’ll apply next week.",
-          "5) Repeat next week with a small variation.",
-          "\nUse your strengths to reduce friction:",
-          `- ${skills.slice(0,4).join("\n- ")}`,
-          "\nSuccess check:",
-          "- You can explain what changed and what you’ll do next week."
-        ].join("\n");
+        const extras = [];
+        if(wantsNetworking) extras.push(networkingTips);
+        if(wantsPresentationTips) extras.push(presentationTips);
+        if(wantsCommunicationTips) extras.push(communicationTips);
+        return [weeklyPlan, extras.length ? "\n\n" + extras.join("\n\n") : ""].join("");
       }
 
       if(wantsNext){
+        // Suggest next based on phase: if Phase 1 not done, do blueprint; else evidence; else integrate.
+        const phase1 = plan.phases?.[0];
+        const phase2 = plan.phases?.[1];
+        const phase3 = plan.phases?.[2];
+        const phaseHint = q.includes("phase 1") ? phase1 : (q.includes("phase 2") ? phase2 : (q.includes("phase 3") ? phase3 : null));
+
+        const nextFocus = target;
+        const nextMini = targetMini;
+
+        const extras = [];
+        if(wantsNetworking) extras.push(networkingTips);
+        if(wantsPresentationTips) extras.push(presentationTips);
+        if(wantsCommunicationTips) extras.push(communicationTips);
+
         return [
-          "What to learn next (simple heuristic):",
-          "- If you can’t produce a mini-output yet, learn the smallest prerequisite first.",
-          "- Otherwise, practice the weakest link until you can demonstrate it end-to-end.",
-          "\nSuggested next focus:",
-          `- Start with: ${target}`,
-          "- Then: turn it into a deliverable you can show in 1 week."
-        ].join("\n");
+          `Next best step for ${goalTitle}:`,
+          `- Focus: **${nextFocus}**`,
+          `- Produce: ${nextMini} (so you have evidence for ${deliverableLabel})`,
+          "",
+          "Do this in 60–90 minutes:",
+          "1) Write a 5-line spec for the mini-output.",
+          "2) Do one practice block (45–60 min) for the smallest prerequisite.",
+          "3) Build the mini-output and score it with the rubric.",
+          "",
+          "If you get stuck:",
+          "- Stop and write the failure cause (what exactly didn’t work).",
+          "- Then redo only the smallest step that caused the failure."
+        ].join("\n") + (extras.length ? "\n\n" + extras.join("\n\n") : "");
       }
 
+      // Default coaching: map question to a concrete action.
+      const extras = [];
+      if(wantsNetworking) extras.push(networkingTips);
+      if(wantsPresentationTips) extras.push(presentationTips);
+      if(wantsCommunicationTips) extras.push(communicationTips);
+
       return [
-        "Coaching answer (rules-based):",
-        "- Break the goal into 3 phases (define → build → integrate).",
-        "- Each week: practice one micro-skill and ship one mini-output.",
-        "- If you get stuck: fix the top 3 blockers first, then do a quality pass at the end."
-      ].join("\n");
+        "Coaching answer (specific to your inputs):",
+        `- Goal: ${goalTitle}`,
+        `- Deliverable: ${deliverableLabel}`,
+        `- Most relevant weakness: ${target}`,
+        "",
+        "Try this today (30–45 minutes):",
+        "1) Write the mini-output spec (5 lines).",
+        "2) Do one practice block for the smallest prerequisite.",
+        "3) Produce a first draft of the mini-output (even if imperfect).",
+        "4) Score it with the rubric and list 1 fix for next time."
+      ].join("\n") + (extras.length ? "\n\n" + extras.join("\n\n") : "");
     }
 
     let lastPlan = null;
     let lastWeaknesses = [];
     let lastSkills = [];
+    let detectedWeaknesses = [];
 
     $("generateBtn").addEventListener("click", () => {
       const goalTitle = $("goalTitle").value.trim();
@@ -446,6 +960,11 @@
       lastWeaknesses = weaknesses;
       lastSkills = skills;
 
+      // Reset any detected weaknesses when regenerating.
+      detectedWeaknesses = [];
+      $("applyWeaknessesBtn").disabled = true;
+      $("testAnswer").textContent = "Timeline generated. Optional speaking test is ready.";
+
       renderTimeline(lastPlan);
       $("answer").textContent = "Timeline generated. Now ask: ‘How do I improve X?’ or ‘What should I learn next?’";
     });
@@ -460,11 +979,47 @@
       $("answer").textContent = ans;
     });
 
-    // Optional: prefill a demo
-    $("goalTitle").value = "Become job-ready as a data analyst";
-    $("goalDesc").value = "Build a portfolio with 3 projects and be able to explain analysis end-to-end.";
-    $("skills").value = "Excel, curiosity, writing";
-    $("weaknesses").value = "SQL joins, statistics, storytelling";
+    // Optional speaking test (offline placeholder)
+    $("testBtn").addEventListener("click", async () => {
+      const file = $("videoFile").files?.[0];
+      const prompt = $("testPrompt").value.trim();
+      if(!file){
+        $("testAnswer").textContent = "Please upload a video first.";
+        return;
+      }
+
+      // Offline MVP: we cannot actually analyze video without an AI/video service.
+      // We provide a structured rubric-based hypothesis and let the user confirm.
+      const sizeMB = (file.size/1024/1024).toFixed(1);
+      $("testAnswer").textContent = `Received video (${sizeMB} MB).\n\nOffline mode: video analysis is a placeholder.\n\nWhat I can do now:\n- Suggest likely weaknesses based on your current plan inputs\n- Give you a checklist to self-score\n- Add suggested weaknesses to your timeline if you confirm`;
+
+      // Heuristic: if user already listed weaknesses, keep them; otherwise suggest director defaults.
+      const base = (lastWeaknesses && lastWeaknesses.length) ? lastWeaknesses : ["storytelling","presentation","communication"];
+      detectedWeaknesses = base.slice(0,3);
+
+      $("testAnswer").textContent += `\n\nSuggested weaknesses to focus on:\n- ${detectedWeaknesses.join("\n- ")}`;
+      $("applyWeaknessesBtn").disabled = false;
+    });
+
+    $("applyWeaknessesBtn").addEventListener("click", () => {
+      if(!detectedWeaknesses.length){
+        $("testAnswer").textContent = "No detected weaknesses to apply.";
+        return;
+      }
+      // Merge detected weaknesses into the weaknesses input.
+      const current = splitList($("weaknesses").value);
+      const merged = Array.from(new Set([...current, ...detectedWeaknesses]));
+      $("weaknesses").value = merged.join(", ");
+      $("testAnswer").textContent = `Added detected weaknesses to your plan:\n- ${detectedWeaknesses.join("\n- ")}\n\nNow click “Generate timeline” to refresh the timeline.`;
+      $("applyWeaknessesBtn").disabled = true;
+    });
+
+    // Ensure no prefilled demo content on load.
+    clearInputsOnLoad();
+
+    // Footer year
+    const y = document.getElementById('year');
+    if(y) y.textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
