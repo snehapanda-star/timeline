@@ -9,6 +9,13 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret")
 
+# Session cookie settings so history works reliably on hosted domains.
+# GitHub Pages-style hosting / reverse proxies can otherwise drop cookies.
+app.config.update(
+  SESSION_COOKIE_SAMESITE=os.getenv("FLASK_SESSION_SAMESITE", "Lax"),
+  SESSION_COOKIE_SECURE=os.getenv("FLASK_SESSION_SECURE", "false").lower() == "true",
+)
+
 client = AzureOpenAI(
   azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
   api_key=os.getenv("AZURE_OPENAI_API_KEY"),
@@ -87,6 +94,61 @@ def generate_timeline():
     plan = json.loads(content[start : end + 1]) if start != -1 and end != -1 else {"meta": payload, "weeks": []}
 
   return jsonify(plan)
+
+
+@app.post("/api/coach")
+def coach():
+  payload = request.get_json(force=True, silent=True) or {}
+  plan = payload.get("plan") or {}
+  question = payload.get("question") or ""
+
+  meta = plan.get("meta") or {}
+  goal_title = meta.get("goalTitle", "")
+  goal_desc = meta.get("goalDesc", "")
+  weekly_hours = meta.get("weeklyHours", "")
+  target_weeks = meta.get("targetWeeks", "")
+  constraints = meta.get("constraints", "")
+  skills = meta.get("skills", "")
+  weaknesses = meta.get("weaknesses", "")
+  learning_style = meta.get("learningStyle", "")
+
+  model = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-5-nano")
+
+  system = (
+    "You are an expert learning coach. Answer the user's question with a practical, actionable plan. "
+    "Be concise. Use bullet points when helpful."
+  )
+
+  user = (
+    "Context (goal + timeline):\n"
+    f"Goal title: {goal_title}\n"
+    f"Goal description: {goal_desc}\n"
+    f"Weekly hours: {weekly_hours}\n"
+    f"Target weeks: {target_weeks}\n"
+    f"Constraints: {constraints}\n"
+    f"Current skills/qualities: {skills}\n"
+    f"Skills to improve: {weaknesses}\n"
+    f"Learning style: {learning_style}\n\n"
+    "Timeline weeks (if available):\n"
+    f"{json.dumps(plan.get('weeks', []), ensure_ascii=False)[:12000]}\n\n"
+    "User question:\n"
+    f"{question}\n\n"
+    "Answer format:\n"
+    "- Short answer (1-2 sentences)\n"
+    "- What to do next (3-5 bullets)\n"
+    "- How to measure success (1-2 bullets)\n"
+  )
+
+  resp = client.chat.completions.create(
+    model=model,
+    messages=[
+      {"role": "system", "content": system},
+      {"role": "user", "content": user},
+    ],
+  )
+
+  content = resp.choices[0].message.content or ""
+  return jsonify({"answer": content})
 
 
 HOME_HTML = r'''
@@ -200,6 +262,8 @@ HOME_HTML = r'''
     }
     .field textarea{min-height:92px;resize:vertical}
 
+    #goalDesc{font-family:"Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;}
+
     .wizardNavRow{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
     .btn{
       border-radius:14px;
@@ -233,8 +297,11 @@ HOME_HTML = r'''
 
     .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
     .tabBtn{padding:10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:var(--text);cursor:pointer;font-weight:800}
-    .tabBtn.active{background:linear-gradient(135deg,var(--primary),var(--primary2));border-color:rgba(255,255,255,.18)}
+    .tabBtn.active{background:linear-gradient(135deg,#2563eb,#60a5fa);border-color:rgba(37,99,235,.35);color:#0b1220}
     .tabPanel{padding:16px;border-top:1px solid rgba(255,255,255,.08)}
+
+    /* Make dropdown selected text white in dark mode */
+    body:not([data-theme="light"]) select{color:#e5e7eb;}
 
     .timeline{margin-top:10px}
     .phase{border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:12px;margin:10px 0;background:rgba(255,255,255,.03)}
@@ -430,6 +497,7 @@ HOME_HTML = r'''
         <h2>History</h2>
         <div class="small muted">Your last generated roadmaps (inputs + timeline). Stored in your browser session.</div>
         <div class="wizardNavRow" style="justify-content:flex-start;gap:10px;margin-top:12px">
+          <button class="btn btn-ghost" id="refreshHistoryBtn" type="button" aria-label="Refresh history">↻ Refresh</button>
           <button class="btn btn-ghost" id="clearHistoryBtn" type="button">Clear history</button>
         </div>
         <div class="hr"></div>
@@ -799,11 +867,16 @@ HOME_HTML = r'''
           plan
         };
         await apiHistoryAdd(item);
-        // Refresh history list if user opens it
-        if($('panelHistory').style.display === 'block'){
-          const h = await apiHistoryList();
-          renderHistory(h.history);
-        }
+
+        // Always refresh history after saving so the next time you open History
+        // you immediately see all newly generated roadmaps.
+        const h = await apiHistoryList();
+        renderHistory(h.history);
+
+        // Go to Roadmap tab after generating
+        $('tabRoadmap').click();
+
+        // (No need to condition on panel visibility; renderHistory updates the list.)
       } catch (err) {
         $('answer').textContent = `Error generating timeline: ${String(err?.message || err)}`;
       } finally {
@@ -822,11 +895,47 @@ HOME_HTML = r'''
       }
     });
 
-    $('askBtn').addEventListener('click', () => {
+    const refreshBtn = $('refreshHistoryBtn');
+    if(refreshBtn){
+      refreshBtn.addEventListener('click', async () => {
+        try{
+          const h = await apiHistoryList();
+          renderHistory(h.history);
+        }catch(e){
+          // ignore
+        }
+      });
+    }
+
+    $('askBtn').addEventListener('click', async () => {
       const q = $('question').value.trim();
       if(!q){ $('answer').textContent = 'Type a question first.'; return; }
       if(!wizard.plan){ $('answer').textContent = 'Generate a timeline first, then ask questions.'; return; }
-      $('answer').textContent = answerQuestion(wizard.plan, q);
+
+      const askBtn = $('askBtn');
+      const prev = askBtn.textContent;
+      askBtn.disabled = true;
+      askBtn.textContent = 'Thinking...';
+      $('answer').textContent = '';
+
+      try{
+        const res = await fetch('/api/coach', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan: wizard.plan, question: q })
+        });
+        if(!res.ok){
+          const t = await res.text().catch(() => '');
+          throw new Error(`Request failed (${res.status}). ${t}`);
+        }
+        const data = await res.json();
+        $('answer').textContent = data?.answer || 'No answer returned.';
+      }catch(e){
+        $('answer').textContent = `Error: ${String(e?.message || e)}`;
+      }finally{
+        askBtn.disabled = false;
+        askBtn.textContent = prev;
+      }
     });
 
     // init
@@ -862,11 +971,8 @@ HOME_HTML = r'''
     updatePreview();
     showStep(1);
 
-    // On refresh: open History tab and load history immediately.
-    // (Wizard still works; user can generate a new roadmap from the onboarding steps.)
+    // On refresh: show post-onboarding UI, but don't force History tab.
     $('postOnboarding').style.display = 'block';
-    $('tabHistory').click();
-    apiHistoryList().then((h) => renderHistory(h.history)).catch(() => {});
 
     // live preview updates
     ['goalTitle','weeklyHours','targetWeeks','skills','learningStyle'].forEach(id => {
@@ -886,8 +992,6 @@ def index():
 
 @app.post("/api/history/add")
 def history_add():
-  # Lazy import to avoid changing top imports too much.
-  from flask import session
   data = request.get_json(force=True, silent=True) or {}
   item = {
     "id": data.get("id"),
@@ -898,26 +1002,42 @@ def history_add():
   if not item.get("id"):
     return jsonify({"ok": False, "error": "missing id"}), 400
 
-  hist = session.get("history", [])
-  # Cap history size
-  hist = [x for x in hist if x.get("id") != item["id"]]
+  # Ensure the payload is JSON-serializable.
+  try:
+    json.dumps(item.get("plan"), ensure_ascii=False)
+  except Exception:
+    item["plan"] = None
+
+  # Store history in a simple in-memory list keyed by a fixed key.
+  # This avoids Flask session/cookie issues on hosted domains.
+  # NOTE: This is per-process; for multi-worker deployments, use a real DB.
+  global _HISTORY
+  try:
+    _HISTORY
+  except NameError:
+    _HISTORY = []
+
+  hist = [x for x in _HISTORY if x.get("id") != item["id"]]
   hist.insert(0, item)
-  hist = hist[:20]
-  session["history"] = hist
-  return jsonify({"ok": True})
+  hist = hist[:10]
+  _HISTORY = hist
+  return jsonify({"ok": True, "item": item})
 
 
 @app.get("/api/history/list")
 def history_list():
-  from flask import session
-  hist = session.get("history", [])
+  global _HISTORY
+  try:
+    hist = _HISTORY
+  except NameError:
+    hist = []
   return jsonify({"ok": True, "history": hist})
 
 
 @app.post("/api/history/clear")
 def history_clear():
-  from flask import session
-  session["history"] = []
+  global _HISTORY
+  _HISTORY = []
   return jsonify({"ok": True})
 
 if __name__ == "__main__":
